@@ -57,7 +57,7 @@ public interface Watcher {
              * to a server in the ensemble (one of the servers specified
              * in the host connection parameter during ZooKeeper client
              * creation). */
-            SyncConnected (3),
+            SyncConnected (3), // 客户端与Zookeeper服务器建立了连接
 
             /**
              * Auth failed state

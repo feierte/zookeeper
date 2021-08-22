@@ -48,6 +48,7 @@ public class DatadirCleanupManager {
 
     private final File snapDir;
 
+    // zookeeper日志文件存储目录
     private final File dataLogDir;
 
     private final int snapRetainCount;

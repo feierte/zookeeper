@@ -738,18 +738,22 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory {
     public void start() {
         stopped = false;
         if (workerPool == null) {
+            // 初始化workerPool线程池
             workerPool = new WorkerService(
                 "NIOWorker", numWorkerThreads, false);
         }
+        // 挨个启动Selector线程（处理客户端请求线程）
         for(SelectorThread thread : selectorThreads) {
             if (thread.getState() == Thread.State.NEW) {
                 thread.start();
             }
         }
         // ensure thread is started once and only once
+        // 启动acceptThread线程（处理接收连接进行事件）
         if (acceptThread.getState() == Thread.State.NEW) {
             acceptThread.start();
         }
+        // 启动expirerThread线程（处理过期连接）
         if (expirerThread.getState() == Thread.State.NEW) {
             expirerThread.start();
         }
@@ -758,11 +762,11 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory {
     @Override
     public void startup(ZooKeeperServer zks, boolean startServer)
             throws IOException, InterruptedException {
-        start();
+        start(); // 启动相关线程
         setZooKeeperServer(zks);
         if (startServer) {
-            zks.startdata();
-            zks.startup();
+            zks.startdata(); // 加载数据到 ZKDatabase
+            zks.startup(); // 启动定时清除session的管理器，注册JMX，添加请求处理器
         }
     }
 

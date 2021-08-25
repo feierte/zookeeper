@@ -40,7 +40,7 @@ import org.apache.zookeeper.data.StatPersisted;
 @SuppressFBWarnings("EI_EXPOSE_REP2")
 public class DataNode implements Record {
     /** the data for this datanode */
-    byte data[];
+    byte data[]; // 该节点存储的 数据内容
 
     /**
      * the acl map long for this datanode. the datatree has the map
@@ -50,14 +50,14 @@ public class DataNode implements Record {
     /**
      * the stat for this node that is persisted to disk.
      */
-    public StatPersisted stat;
+    public StatPersisted stat; // 该节点的状态信息（会持久化到磁盘上）
 
     /**
      * the list of children for this node. note that the list of children string
      * does not contain the parent path -- just the last part of the path. This
      * should be synchronized on except deserializing (for speed up issues).
      */
-    private Set<String> children = null;
+    private Set<String> children = null; // 该节点的所有子节点
 
     private static final Set<String> EMPTY_SET = Collections.emptySet();
 

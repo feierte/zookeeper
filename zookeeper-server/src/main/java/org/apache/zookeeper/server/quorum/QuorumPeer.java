@@ -105,6 +105,9 @@ import static org.apache.zookeeper.common.NetUtils.formatInetAddr;
  * </pre>
  *
  * The request for the current leader will consist solely of an xid: int xid;
+ *
+ * @apiNote Quorum是集群模式下特有的对象，是Zookeeper实例（ZooKeeperServer）的托管者。QuorumPeer代表了集群中的一台机器，
+ * 在运行期间，QuorumPeer会不断检测当前服务器实例的运行状态，同时根据情况发起Leader选举。
  */
 public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider {
     private static final Logger LOG = LoggerFactory.getLogger(QuorumPeer.class);
@@ -881,19 +884,21 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
 
     @Override
     public synchronized void start() {
+        // 校验当前server.id如果不在peer列表中，则抛出异常
         if (!getView().containsKey(myid)) {
             throw new RuntimeException("My id " + myid + " not in the peer list");
          }
-        loadDataBase();
-        startServerCnxnFactory();
+        loadDataBase(); // 加载ZKDatabase数据库：载入之前持久化到磁盘中的信息
+        startServerCnxnFactory(); // 启动连接服务端
         try {
             adminServer.start();
         } catch (AdminServerException e) {
             LOG.warn("Problem starting AdminServer", e);
             System.out.println(e);
         }
+        // 启动之后马上进行选举，主要是创建选举必须的环境，例如启动相关线程等
         startLeaderElection();
-        super.start();
+        super.start(); // 执行选举逻辑
     }
 
     private void loadDataBase() {
@@ -947,6 +952,7 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
     }
     synchronized public void startLeaderElection() {
        try {
+           // 如果当前节点的状态是LOOKING，这里就会创建一个投自己为Leader的投票信息
            if (getPeerState() == ServerState.LOOKING) {
                currentVote = new Vote(myid, getLastLoggedZxid(), getCurrentEpoch());
            }
@@ -968,6 +974,7 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
                 throw new RuntimeException(e);
             }
         }
+        // 初始化选举算法，electionType默认为3，即使用FastLeaderElection
         this.electionAlg = createElectionAlgorithm(electionType);
     }
 
@@ -1083,11 +1090,13 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
                 LOG.warn("Clobbering already-set QuorumCnxManager (restarting leader election?)");
                 oldQcm.halt();
             }
+            // 监听选举事件的listener
             QuorumCnxManager.Listener listener = qcm.listener;
             if(listener != null){
-                listener.start();
+                listener.start(); // 开启监听器
+                // 初始化选举算法
                 FastLeaderElection fle = new FastLeaderElection(this, qcm);
-                fle.start();
+                fle.start(); // 开启选举
                 le = fle;
             } else {
                 LOG.error("Null listener when initializing cnx manager");
@@ -1209,6 +1218,7 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
                                 shuttingDownLE = false;
                                 startLeaderElection();
                             }
+                            // 寻找Leader节点
                             setCurrentVote(makeLEStrategy().lookForLeader());
                         } catch (Exception e) {
                             LOG.warn("Unexpected exception", e);
@@ -1236,7 +1246,9 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
                 case OBSERVING:
                     try {
                         LOG.info("OBSERVING");
+                        // 设置当前节点启动模式为Observer
                         setObserver(makeObserver(logFactory));
+                        // 与Leader节点进行数据同步
                         observer.observeLeader();
                     } catch (Exception e) {
                         LOG.warn("Unexpected exception",e );
@@ -1263,6 +1275,7 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
                     LOG.info("LEADING");
                     try {
                         setLeader(makeLeader(logFactory));
+                        // 发送自己成为Leader的通知
                         leader.lead();
                         setLeader(null);
                     } catch (Exception e) {

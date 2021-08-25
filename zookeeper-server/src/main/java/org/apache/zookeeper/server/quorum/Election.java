@@ -22,6 +22,9 @@ package org.apache.zookeeper.server.quorum;
 import org.apache.zookeeper.server.quorum.Vote;
 
 public interface Election {
+    // 表示寻找Leader
     public Vote lookForLeader() throws InterruptedException;
+
+    // 关闭服务器之间的连接
     public void shutdown();
 }

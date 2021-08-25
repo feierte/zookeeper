@@ -119,13 +119,14 @@ public class QuorumPeerMain {
                 .getSnapRetainCount(), config.getPurgeInterval());
         purgeMgr.start();
 
+        // 如果在zoo.cfg中配置了多节点信息，那么 config.isDistributed() = true
         if (args.length == 1 && config.isDistributed()) {
-            runFromConfig(config);
+            runFromConfig(config); // 以集群模式启动
         } else {
             LOG.warn("Either no config or no quorum defined in config, running "
                     + " in standalone mode");
             // there is only server in the quorum -- run as standalone
-            ZooKeeperServerMain.main(args);
+            ZooKeeperServerMain.main(args); // 以单机模式启动
         }
     }
 
@@ -157,6 +158,7 @@ public class QuorumPeerMain {
                       true);
           }
 
+          // ------------初始化当前zookeeper服务端节点的配置----------------
           quorumPeer = getQuorumPeer();
           quorumPeer.setTxnFactory(new FileTxnSnapLog(
                       config.getDataLogDir(),
@@ -201,7 +203,7 @@ public class QuorumPeerMain {
           }
           quorumPeer.setQuorumCnxnThreadsSize(config.quorumCnxnThreadsSize);
           quorumPeer.initialize();
-          
+          // 重点方法
           quorumPeer.start();
           quorumPeer.join();
       } catch (InterruptedException e) {

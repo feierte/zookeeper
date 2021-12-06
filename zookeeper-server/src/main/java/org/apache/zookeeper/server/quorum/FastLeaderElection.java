@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
  * finalizeWait determines the amount of time to wait until deciding upon a leader.
  * This is part of the leader election algorithm.
  *
- * @apiNote FastLeaderElection是fast paxos算法标准的实现，基于TCP协议进行选举。
+ * @apiNote FastLeaderElection 是 fast paxos 算法标准的实现，基于 TCP 协议进行选举。
  */
 public class FastLeaderElection implements Election {
     private static final Logger LOG = LoggerFactory.getLogger(FastLeaderElection.class);
@@ -547,10 +547,10 @@ public class FastLeaderElection implements Election {
     Messenger messenger;
 
     /**
-     * 选举轮次：Zookeeper服务器Leader选举的轮次，即logical clock（逻辑时钟）
+     * 选举轮次：Zookeeper 服务器 Leader 选举的轮次，即 logical clock（逻辑时钟）
      * 举例：总统选举，有人竞选上届的总统、有人竞选这届的总统，有人竞选下届的总统，这是一次无效的竞选。
      * 当所有候选者竞选的是同一届的总统，这才是一次有效的竞选。
-     * 即：Leader选举时，所有Zookeeper服务器处于同一个轮次才算一次有效的Leader选举
+     * 即：Leader 选举时，所有 Zookeeper 服务器处于同一个轮次才算一次有效的 Leader 选举
      */
     AtomicLong logicalclock = new AtomicLong(); /* Election instance */
     long proposedLeader;
@@ -700,7 +700,7 @@ public class FastLeaderElection implements Election {
                       " (n.round), " + sid + " (recipient), " + self.getId() +
                       " (myid), 0x" + Long.toHexString(proposedEpoch) + " (n.peerEpoch)");
             }
-            // 放入队列中，由发送器workerSender发送出去
+            // 放入队列中，由发送器 workerSender 发送出去
             sendqueue.offer(notmsg);
         }
     }

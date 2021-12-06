@@ -21,6 +21,11 @@ package org.apache.zookeeper.server.quorum;
 import org.apache.zookeeper.server.quorum.QuorumPeer.ServerState;
 
 
+/**
+ * 投票规则：
+ *  1、首先对比 zxid。zxid 大的服务器优先作为 Leader
+ *  2、若 zxid 相同，比如初始化的时候，每个 Server 的 zxid 都为0，就会比较 myid，myid 大的选出来做 Leader。
+ */
 public class Vote {
     
     public Vote(long id,
@@ -85,10 +90,21 @@ public class Vote {
 
     final private int version;
 
+    /**
+     * 服务器编号 id。在 zoo.cfg 配置文件中配置 myid。
+     * 比如有三台服务器，编号分别是1，2，3。编号越大在选举算法中的权重越大。
+     */
     final private long id;
-    
+
+    /**
+     * 被推举的Leader事务ID，服务器中存放的最新数据version，值越大说明数据越新，在选举中数据越新权重越大。
+     */
     final private long zxid;
-    
+
+    /**
+     * 逻辑时钟。
+     * 用来判断多个投票是否在同一轮选举周期中，该值在服务端是一个自增序列，每次进入新一轮的投票后，都会对该值进行加1操作。
+     */
     final private long electionEpoch;
     
     final private long peerEpoch;

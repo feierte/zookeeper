@@ -27,6 +27,11 @@ import org.apache.zookeeper.Watcher.Event.KeeperState;
  *  is able to respond to.  The WatchedEvent includes exactly what happened,
  *  the current state of the ZooKeeper, and the path of the znode that
  *  was involved in the event.
+ *
+ * @apiNote WatchedEvent 和 WatcherEvent 表示的是同个事物，都是对一个服务端事件的封装。
+ * 不同的是， WatchedEvent 是一个逻辑事件，用于服务端和客户端程序执行过程中所需的逻辑对象，而 WatcherEvent 因为实现了序列化接口，因此可以用于网络传输。
+ *
+ * @see WatcherEvent
  */
 @InterfaceAudience.Public
 public class WatchedEvent {

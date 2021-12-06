@@ -132,6 +132,8 @@ public class ClientCnxn {
 
     /**
      * These are the packets that need to be sent.
+     *
+     * @apiNote 待发送给服务端的 Packet 列表
      */
     private final LinkedBlockingDeque<Packet> outgoingQueue = new LinkedBlockingDeque<Packet>();
 
@@ -801,6 +803,8 @@ public class ClientCnxn {
     /**
      * This class services the outgoing request queue and generates the heart
      * beats. It also spawns the ReadThread.
+     *
+     * @apiNote 负责客户端和服务器端的数据通信, 也包括事件信息的传输
      */
     class SendThread extends ZooKeeperThread {
         private long lastPingSentNs;

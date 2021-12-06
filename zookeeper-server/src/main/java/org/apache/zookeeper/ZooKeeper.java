@@ -260,10 +260,13 @@ public class ZooKeeper implements AutoCloseable {
      * API.
      */
     static class ZKWatchManager implements ClientWatchManager {
+        // 节点的数据内容和数据的版本号dataVersion变更的watchers，该map是数据节点路径和watcher对象的映射
         private final Map<String, Set<Watcher>> dataWatches =
             new HashMap<String, Set<Watcher>>();
+        // 节点新增、删除的watchers集合
         private final Map<String, Set<Watcher>> existWatches =
             new HashMap<String, Set<Watcher>>();
+        // 数据节点的子节点列表发生变更的watchers(新增、删除子节点触发，子节点内容变更不触发)
         private final Map<String, Set<Watcher>> childWatches =
             new HashMap<String, Set<Watcher>>();
         private boolean disableAutoWatchReset;
@@ -272,6 +275,7 @@ public class ZooKeeper implements AutoCloseable {
             this.disableAutoWatchReset = disableAutoWatchReset;
         }
 
+        // 客户端的默认 watcher，在实例化 ZooKeeper 客户端对象时，可以通过构造方法传入
         protected volatile Watcher defaultWatcher;
 
         final private void addTo(Set<Watcher> from, Set<Watcher> to) {
@@ -540,7 +544,9 @@ public class ZooKeeper implements AutoCloseable {
      * Register a watcher for a particular path.
      */
     public abstract class WatchRegistration {
+        // 注册的 watcher
         private Watcher watcher;
+        // 要监听的节点路径
         private String clientPath;
         public WatchRegistration(Watcher watcher, String clientPath)
         {
@@ -548,6 +554,7 @@ public class ZooKeeper implements AutoCloseable {
             this.clientPath = clientPath;
         }
 
+        // 抽象方法，获取znode path和对应的watcher set的map关系
         abstract protected Map<String, Set<Watcher>> getWatches(int rc);
 
         /**

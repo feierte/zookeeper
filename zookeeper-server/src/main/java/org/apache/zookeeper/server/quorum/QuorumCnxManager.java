@@ -139,8 +139,11 @@ public class QuorumCnxManager {
     /*
      * Mapping from Peer to Thread number
      */
+    // 发送线程，对端的sid作为key，value为线程SendWorker
     final ConcurrentHashMap<Long, SendWorker> senderWorkerMap;
+    // 发送队列，对端的sid作为key，value是一个消息队列先进先出，有界队列
     final ConcurrentHashMap<Long, ArrayBlockingQueue<ByteBuffer>> queueSendMap;
+    // 最后发送的消息
     final ConcurrentHashMap<Long, ByteBuffer> lastMessageSent;
 
     /*
@@ -189,7 +192,9 @@ public class QuorumCnxManager {
             this.sid = sid;
         }
 
+        // 消息体
         ByteBuffer buffer;
+        // 消息来源方的sid
         long sid;
     }
 
@@ -600,6 +605,7 @@ public class QuorumCnxManager {
         // do authenticating learner
         authServer.authenticate(sock, din);
         //If wins the challenge, then close the new connection.
+        // tie-breaking机制，如果sid比自己小，则关闭该连接，也就是保证只有比自己sid大的才能发送信息过来。
         if (sid < self.getId()) {
             /*
              * This replica might still believe that the connection to sid is
@@ -1020,6 +1026,7 @@ public class QuorumCnxManager {
      * one.
      */
     class SendWorker extends ZooKeeperThread {
+        // 目标机器sid，不是当前机器sid
         Long sid;
         Socket sock;
         RecvWorker recvWorker;
@@ -1121,6 +1128,8 @@ public class QuorumCnxManager {
                  */
                 ArrayBlockingQueue<ByteBuffer> bq = queueSendMap.get(sid);
                 if (bq == null || isSendQueueEmpty(bq)) {
+                    // 在SendWorker中，一旦Zookeeper发现针对当前服务器的消息发送队列为空，那么此时需要从lastMessageSent中取出一个最近发送过的消息来进行再次发送，
+                    // 这是为了解决接收方在消息接收前或者接收到消息后服务器挂了，导致消息尚未被正确处理。同时，Zookeeper能够保证接收方在处理消息时，会对重复消息进行正确的处理。
                    ByteBuffer b = lastMessageSent.get(sid);
                    if (b != null) {
                        LOG.debug("Attempting to send lastMessage to sid=" + sid);
@@ -1171,6 +1180,7 @@ public class QuorumCnxManager {
      * channel breaks, then removes itself from the pool of receivers.
      */
     class RecvWorker extends ZooKeeperThread {
+        // 来源方 sid
         Long sid;
         Socket sock;
         volatile boolean running = true;
